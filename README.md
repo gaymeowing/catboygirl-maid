@@ -1,6 +1,6 @@
 # duster
 
-The fastest, and simpliest maid out there for luau.
+The fastest, and simplest maid out there for luau.
 
 ```luau
 local RunService = game:GetService("RunService")
