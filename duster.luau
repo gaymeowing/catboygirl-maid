@@ -1,220 +1,92 @@
 --!native
 
--- duster
--- fast and lightweight maid impl ( thats also better than janitor )
+--[[
+	duster
+	fast and lightweight maid impl ( thats also better than janitor )
+]]
 
-type Types = "table" | "function" | "thread" | "Instance" | "RBXScriptConnection"
+local cleanup_method_names = require("./cleanup_method_names")
 
 type TableCleanupMethod = <V>(self: (V & {})) -> ()
 	
-export type Cleanable =
-	| { Disconnect: TableCleanupMethod }
-	| { disconnect: TableCleanupMethod }
-	| { Cleanup: TableCleanupMethod }
-	| { destroy: TableCleanupMethod }
-	| { Destroy: TableCleanupMethod }
-	| { cleanup: TableCleanupMethod }
-	| { Cleanup: TableCleanupMethod }
-	| { clear: TableCleanupMethod }
-	| { Clear: TableCleanupMethod }
-	| RBXScriptConnection
-	| Instance 
+type Cleaner<V> = (((value: V) -> ()) | () -> ())?
+
+--[[
+	this exists because otherwise if the dev doesnt have roblox types in their lsp
+	cleanable will become a type error
+]]
+type function IfAndUnion(a: type, b: type, c: type)
+	return if b ~= types.any and c ~= types.any then 
+			types.unionof(a, b, c) 
+		else 
+			a
+end
+
+type RBXScriptConnection = RBXScriptConnection
+
+type Instance = Instance
+
+export type Cleanable = IfAndUnion<
+	| { [keyof<typeof(cleanup_method_names)>]: TableCleanupMethod }
 	| () -> ()
-	| thread
-	
-local DISCONNECT = (function()
-	local conn = script.Changed:Connect(function() end)
-	local disconnect = conn.Disconnect
-	disconnect(conn)
-	return disconnect
-end)()
-local TYPEOF = typeof :: <V>(value: V) -> Types
-local DESTROY = game.Destroy
+	| thread,
+	RBXScriptConnection, Instance
+>
+
+type DusterImpl<D> = {
+	--[[
+		Inserts a value to the `duster`, with the option of providing a `cleaner` to use to clean the value.
+		This function is eqvilent to `table.insert`, except for the fact it allows for a `cleaner` function. 
+		It is reccomended to use `table.insert` instead if possible, as it will be much more faster as it is [fast-called](https://luau.org/performance#optimized-libraries).
+	]]
+	insert: <V>(duster: D, value: V & Cleanable, cleaner: Cleaner<V>) -> (),
+	--[[
+		Cleans up and removes a `value` from the `duster` provided.
+	]]
+	remove: (duster: D, value: Cleanable) -> (),
+	--[[
+		Cleans up and removes every value in the `duster` provided.
+	]]
+	clear: (duster: D) -> (),
+}
+
+type DusterPrototype =  DusterImpl<Duster> & {
+	__index: DusterPrototype,
+}
+
+export type Duster = typeof(setmetatable({} :: {
+	values: { Cleanable }
+}, {} :: DusterPrototype))
+
+type Export = DusterImpl<{ Cleanable }> & {
+	--[[
+		Creates a new `duster` object.
+	]]
+	create: () -> Duster,
+}
+
+local DISCONNECT: (any) -> () = function() end
+local CLOSE: (thread) -> () = coroutine.close
+local DESTROY: (any) -> () = function() end
 local INSERT = table.insert
-local CANCEL = task.cancel
-local CLEAR = table.clear
 local FIND = table.find
-	
-local duster = {}
+local TYPEOF = typeof
 
-local function REMOVE<V>(t: { V }, index: number)
-	local length = #t
-
-	if length ~= 1 then
-		local last = t[length]
+local function SWAP_REMOVE(t: { unknown }, index: number)
+	if #t ~= 1 then
+		local last = t[#t]
 		t[index] = last
-		t[length] = nil
+		t[#t] = nil
 	else
 		t[1] = nil
 	end
 end
 
--- have to keep the generic, as otherwise typechecker WILL kick and scream
---[[
-	Cleans and removes a value from the cleanup array provided
-]]
-function duster.remove<V>(duster: { Cleanable }, value: V & Cleanable)
-	local index = FIND(duster, (value :: any))
-	
-	if index then
-		local type = TYPEOF(value)
-
-		if type == "function" then
-			(value :: any)()
-		elseif type == "thread" then
-			CANCEL((value :: any))
-		elseif type == "table" then
-			--[[
-				these are sorted by what i think atleast is the most likely
-				cleanup method names
-			]]
-			local destroy = (value :: any).Destroy
-		
-			if destroy then
-				destroy(value)
-				REMOVE(duster, index)
-				return
-			end
-			local disconnect = (value :: any).Disconnect
-		
-			if disconnect then
-				disconnect(value)
-				REMOVE(duster, index)
-				return
-			end
-			local destroy2 = (value :: any).destroy
-		
-			if destroy2 then
-				destroy2(value)
-				REMOVE(duster, index)
-				return
-			end
-			local clean = (value :: any).cleanup
-		
-			if clean then
-				clean(value)
-				REMOVE(duster, index)
-				return
-			end
-			local disconnect2 = (value :: any).disconnect
-		
-			if disconnect2 then
-				disconnect2(value)
-				REMOVE(duster, index)
-				return
-			end
-			local clear2 = (value :: any).Clear
-	
-			if clear2 then
-				clear2(value)
-				REMOVE(duster, index)
-				return
-			end
-			local clear = (value :: any).clear
-		
-			if clear then
-				clear(value)
-				REMOVE(duster, index)
-				return
-			end
-			local clean2 = (value :: any).Cleanup
-		
-			if clean2 then
-				clean2(value)
-				REMOVE(duster, index)
-				return
-			end
-		elseif type == "Instance" then
-			DESTROY((value :: any))
-		elseif type == "RBXScriptConnection" then
-			DISCONNECT((value :: any))
-		end
-		REMOVE(duster, index)
-	end
+local function SET_REMOVE(t: { unknown }, index: number)
+	t[index] = nil
 end
 
---[[
-	Cleans up every value in the clenaup array and clears the cleanup array
-]]
-function duster.clear(duster: { Cleanable })
-	for _, value in duster do
-		local type = TYPEOF(value)
-
-		if type == "function" then
-			(value :: any)()
-		elseif type == "thread" then
-			CANCEL((value :: any))
-		elseif type == "table" then
-			--[[
-				these are sorted by what i think atleast is the most likely
-				cleanup method names
-			]]
-			local destroy = (value :: any).Destroy
-		
-			if destroy then
-				destroy(value)
-				continue
-			end
-			local disconnect = (value :: any).Disconnect
-		
-			if disconnect then
-				disconnect(value)
-				continue
-			end
-			local destroy2 = (value :: any).destroy
-		
-			if destroy2 then
-				destroy2(value)
-				continue
-			end
-			local clean = (value :: any).cleanup
-		
-			if clean then
-				clean(value)
-				continue
-			end
-			local disconnect2 = (value :: any).disconnect
-		
-			if disconnect2 then
-				disconnect2(value)
-				continue
-			end
-			local clear2 = (value :: any).Clear
-	
-			if clear2 then
-				clear2(value)
-				continue
-			end
-			local clear = (value :: any).clear
-		
-			if clear then
-				clear(value)
-				continue
-			end
-			local clean2 = (value :: any).Cleanup
-		
-			if clean2 then
-				clean2(value)
-			end
-		elseif type == "Instance" then
-			DESTROY((value :: any))
-		elseif type == "RBXScriptConnection" then
-			DISCONNECT((value :: any))
-		end
-	end
-	CLEAR(duster)
-end
-
---[[
-	Inserts a value to the duster, with the option of providing a cleanup function to use to clean the value.
-	This function is eqvilent to `table.insert`, except for the fact it allows for a cleanup function. 
-	It is reccomended to use `table.insert` instead if possible, as it will be much more faster as it is fastcalled.
-]]
-function duster.insert<V>(
-	duster: { Cleanable }, 
-	value: V & Cleanable, 
-	cleaner: (((value: V) -> ()) | () -> ())?
-): V
+local function insert<V>(duster: { Cleanable }, value: V & Cleanable, cleaner: Cleaner<V>)
 	if cleaner then
 		INSERT(duster, function()
 			(cleaner :: any)(value)
@@ -224,7 +96,83 @@ function duster.insert<V>(
 	end
 	return value
 end
+
+local function remove(duster: { Cleanable }, value: Cleanable)
+	local index = FIND(duster, value)
 	
-return table.freeze(duster) 
+	if index then
+		CLEANUP(SWAP_REMOVE)
+	end
+end
+
+local function clear(duster: { Cleanable })
+	for index, value in duster do
+		CLEANUP(SET_REMOVE)
+	end
+end
+
+local duster = {} :: DusterPrototype
+
+function duster.insert(duster, value, cleaner)
+	insert(duster.values, value, cleaner)
+end
+
+function duster.remove(duster, value)
+	remove(duster.values, value)
+end
+
+function duster.clear(duster)
+	clear(duster.values)
+end
+
+local export = {
+	insert = insert,
+	remove = remove,
+	clear = clear,
+} :: Export
+
+function export.create()
+	return table.freeze(setmetatable({
+		values = {}
+	}, duster))
+end
+
+do
+
+	local function pindex(t: unknown, k: unknown): (boolean, unknown)
+		return pcall(function(t, k)
+			return t[k]
+		end, t, k)
+	end
+
+	-- checking if duster is running in roblox
+	if game and script and elapsedTime and Vector3int16 then
+		local connection = script.Changed:Connect(function() end)
+		DISCONNECT = connection.Disconnect :: any
+		DESTROY = game.Destroy :: any
+		DISCONNECT(connection)
+		CLOSE = task.cancel :: any
+	else
+		local task_aliases = {
+			"@std", "@lute", "@lune"
+		}
+
+		for _, path in task_aliases do
+			local require_success, task = pcall(require, path .. "/task")
+
+			if require_success then
+				local index_success, cancel = pindex(task, "cancel")
+
+				if index_success then
+					CLOSE = cancel :: any
+					break
+				end
+			end
+		end
+	end
 	
+	duster.__index = duster
+	table.freeze(duster)
+end
 	
+return table.freeze(export) :: Export
