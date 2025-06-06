@@ -1,3 +1,7 @@
 {
-	"languageMode": "strict"
+	"globals": [ "CLEANUP" ],
+	"languageMode": "strict",
+	"aliases": {
+		"lune": "~/.lune/.typedefs/0.9.3/"
+	}
 }
