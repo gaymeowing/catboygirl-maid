@@ -22,6 +22,10 @@ type function IfAndUnion(a: type, b: type, c: type)
 			a
 end
 
+type function Negate(t)
+	return types.negationof(t)
+end
+
 type RBXScriptConnection = RBXScriptConnection
 
 type Instance = Instance
