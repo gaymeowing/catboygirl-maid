@@ -143,12 +143,6 @@ end
 
 do
 
-	local function pindex(t: unknown, k: unknown): (boolean, unknown)
-		return pcall(function(t, k)
-			return t[k]
-		end, t, k)
-	end
-
 	-- checking if duster is running in roblox
 	if game and script and elapsedTime and Vector3int16 then
 		local connection = script.Changed:Connect(function() end)
@@ -165,7 +159,9 @@ do
 			local require_success, task = pcall(require, path .. "/task")
 
 			if require_success then
-				local index_success, cancel = pindex(task, "cancel")
+				local index_success, cancel = pcall(function(task)
+					return task.cancel
+				end, task)
 
 				if index_success then
 					CLOSE = cancel :: any
