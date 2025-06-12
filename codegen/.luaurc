@@ -1,0 +1,3 @@
+{
+	"globals": [ "REMOVE", "DISCONNECT", "DESTROY", "METHOD_CLEAN", "CLOSE", "TYPEOF", "value" ]
+}
