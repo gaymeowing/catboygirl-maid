@@ -86,10 +86,6 @@ local function SWAP_REMOVE(t: { unknown }, index: number)
 	end
 end
 
-local function SET_REMOVE(t: { unknown }, index: number)
-	t[index] = nil
-end
-
 local function insert<V>(duster: { Cleanable }, value: V & Cleanable, cleaner: Cleaner<V>)
 	if cleaner then
 		INSERT(duster, function()
@@ -113,6 +109,12 @@ local function clear(duster: { Cleanable })
 	for index, value in duster do
 		CLEANUP(nil, "continue")
 	end
+
+	--[[
+		using table.clear because im unsure if a gc pause can occur during iteration
+		that will resize the cleanup array making it a hash mid iteration
+	]]
+	table.clear(duster)
 end
 
 local duster = {} :: DusterPrototype
