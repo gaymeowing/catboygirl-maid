@@ -111,7 +111,7 @@ end
 
 local function clear(duster: { Cleanable })
 	for index, value in duster do
-		CLEANUP(SET_REMOVE)
+		CLEANUP(SET_REMOVE, "continue")
 	end
 end
 
