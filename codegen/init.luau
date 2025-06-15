@@ -76,10 +76,23 @@ SRC = string.gsub(SRC, "| { %[keyof<typeof%(cleanup_method_names%)>%]: TableClea
 	return `{table.concat(type_union, "\n\t")}`
 end)
 
-SRC = string.gsub(SRC, "CLEANUP%((.-)%)", function(setter)
-	return string.gsub(
-		CLEANUP_SRC, "REMOVE%(%)", `{setter}(duster :: any, index)`
-	) :: string
+SRC = string.gsub(SRC, "CLEANUP%((.-)%)", function(args)
+	local setter, keyword = string.match(args, "([%w_]-), \"(.-)\"")
+	local inner = CLEANUP_SRC
+
+	if keyword then
+		--keyword = string.sub(keyword, 2, #keyword - 1)
+		inner = string.gsub(inner, "return", keyword)
+	end
+
+	if not setter then
+		setter = args
+	end
+
+	return if setter ~= "nil" then
+			string.gsub(inner, "REMOVE%(%)", `{setter}(duster :: any, index)`)
+		else
+			string.gsub(inner, "%s-REMOVE%(%)", "")
 end)
 
 fs.writeFile("duster.luau", SRC)
