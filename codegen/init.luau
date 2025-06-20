@@ -73,7 +73,7 @@ SRC = string.gsub(SRC, "| { %[keyof<typeof%(cleanup_method_names%)>%]: TableClea
 		return #a > #b
 	end)
 
-	return `{table.concat(type_union, "\n\t")}`
+	return table.concat(type_union, "\n\t")
 end)
 
 SRC = string.gsub(SRC, "CLEANUP%((.-)%)", function(args)
@@ -95,4 +95,9 @@ SRC = string.gsub(SRC, "CLEANUP%((.-)%)", function(args)
 			string.gsub(inner, "%s-REMOVE%(%)", "")
 end)
 
-fs.writeFile("duster.luau", SRC)
+if string.sub(process.args[1], 1, 1) == "w" then
+	fs.writeFile("duster.luau", SRC)
+end
+
+print(SRC)
+return SRC
