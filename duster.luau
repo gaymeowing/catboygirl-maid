@@ -22,10 +22,6 @@ type function IfAndUnion(a: type, b: type, c: type)
 			a
 end
 
-type function Negate(t)
-	return types.negationof(t)
-end
-
 type RBXScriptConnection = RBXScriptConnection
 
 type Instance = Instance
@@ -43,7 +39,7 @@ type DusterImpl<D> = {
 		This function is eqvilent to `table.insert`, except for the fact it allows for a `cleaner` function. 
 		It is reccomended to use `table.insert` instead if possible, as it will be much more faster as it is [fast-called](https://luau.org/performance#optimized-libraries).
 	]]
-	insert: <V>(duster: D, value: V & Cleanable, cleaner: Cleaner<V>) -> (),
+	insert: <V>(duster: D, value: V & Cleanable, cleaner: Cleaner<V>) -> V,
 	--[[
 		Cleans up and removes a `value` from the `duster` provided.
 	]]
@@ -86,7 +82,7 @@ local function SWAP_REMOVE(t: { unknown }, index: number)
 	end
 end
 
-local function insert<V>(duster: { Cleanable }, value: V & Cleanable, cleaner: Cleaner<V>)
+local function insert<V>(duster: { Cleanable }, value: V & Cleanable, cleaner: Cleaner<V>): V
 	if cleaner then
 		INSERT(duster, function()
 			(cleaner :: any)(value)
@@ -94,6 +90,7 @@ local function insert<V>(duster: { Cleanable }, value: V & Cleanable, cleaner: C
 	else
 		INSERT(duster, value :: any)
 	end
+	
 	return value
 end
 
