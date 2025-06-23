@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - "README.md"
+      - "*/.luaurc"
+      - ".luaurc"
+  pull_request:
+    branches: [ main ]
+    paths-ignore:
+      - "README.md"
+      - "*/.luaurc"
+      - ".luaurc"
+
+jobs:
+    Luau:
+        runs-on: ubuntu-latest
+        timeout-minutes: 2
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Install Rokit
+              uses: CompeyDev/setup-rokit@v0.1.0
+
+            - name: Install Luau
+              uses: encodedvenom/install-luau@v4.3
+              with:
+                  version: "0.678"
+                  verbose: "true"
+
+            - name: Run Codegen
+              run: lune run scripts/codegen w
+
+            - name: Test
+              run: luau duster.luau
