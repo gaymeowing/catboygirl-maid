@@ -1,4 +1,5 @@
 # duster
+#### [![CI](https://github.com/gaymeowing/duster/actions/workflows/ci.yml/badge.svg)](https://github.com/gaymeowing/duster/actions/workflows/ci.yml)
 
 The fastest, and simplest maid out there for luau.
 
