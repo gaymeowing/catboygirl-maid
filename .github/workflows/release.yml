@@ -1,0 +1,21 @@
+name: Release
+
+on:
+    workflow_dispatch:
+        inputs:
+            version:
+                description: 'version'
+                required: true
+                type: string
+
+jobs:
+    Main:
+        runs-on: ubuntu-latest
+        steps: 
+            - name: Install Rokit
+              uses: CompeyDev/setup-rokit@v0.1.0
+
+            - name: Make Release
+              env:
+                GH_TOKEN: ${{ github.token }}
+              run: lune run scripts/release ${{ inputs.version }}
