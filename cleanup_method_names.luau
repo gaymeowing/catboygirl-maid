@@ -5,7 +5,7 @@
 ]]
 
 return table.freeze({ 
-	clear = 1, 
+	clear = 1, -- this is here because the cleanup method for duster is 'clear'
 	Destroy = 2,
 	Disconnect = 3,
 	destroy = 4,
