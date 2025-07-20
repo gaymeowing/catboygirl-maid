@@ -39,4 +39,4 @@ jobs:
               run: lune run scripts/codegen w
 
             - name: Test
-              run: luau tests/luau
+              run: luau tests/luau.luau
