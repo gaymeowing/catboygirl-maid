@@ -147,7 +147,6 @@ do
 		local connection = script.Changed:Connect(function() end)
 		DISCONNECT = connection.Disconnect :: any
 		DESTROY = game.Destroy :: any
-		DISCONNECT(connection)
 		CLOSE = task.cancel :: any
 	else
 		local task_aliases = {
