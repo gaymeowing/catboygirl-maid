@@ -142,7 +142,7 @@ end
 
 do
 
-	-- checking if maid is running in roblox
+	-- checking if catboygirl maid is running in roblox
 	if game and script and elapsedTime and Vector3int16 then
 		local connection = script.Changed:Connect(function() end)
 		DISCONNECT = connection.Disconnect :: any
