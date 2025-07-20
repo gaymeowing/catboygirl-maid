@@ -13,10 +13,10 @@ maid.insert(garbage, RunService.PostSimulation:Connect(function()
 	print("meow :3")
 end))
 
-print(typeof(duster[1])) --> "RBXScriptConnection"
+print(typeof(maid[1])) --> "RBXScriptConnection"
 
-duster.clear(garbage)
-print(duster[1]) --> nil
+maid.clear(garbage)
+print(maid[1]) --> nil
 
 local part_maid = maid.create()
 local decal = Instance.new("Decal")
