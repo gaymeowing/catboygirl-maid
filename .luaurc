@@ -2,6 +2,7 @@
 	"globals": [ "CLEANUP" ],
 	"languageMode": "strict",
 	"aliases": {
-		"lune": "~/.lune/.typedefs/0.9.3/"
+		"lune": "~/.lune/.typedefs/0.9.3/",
+		"catboygirl-maid": "./maid",
 	}
 }

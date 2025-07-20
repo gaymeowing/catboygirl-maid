@@ -1,7 +1,7 @@
 
 --[[
 	codegen
-	replaces placeholders in duster for testing & release
+	replaces placeholders in catboygirl maid for testing & release
 ]]
 
 local cleanup_method_names = require("../../cleanup_method_names")
@@ -22,7 +22,7 @@ local CLEANUP_SRC = REMOVE_FROM_END(fs.readFile("scripts/codegen/cleanup.luau"),
 local HOT_COMMENT_PATTERN = `%-%-![^%[%]]+{NEW_LINE_CHAR}`
 local LICENSE = string.sub(license, 5, #license - 2)
 local METHOD_NAMES_ARRAY = {} :: { string }
-local SRC = fs.readFile("duster.luau")
+local SRC = fs.readFile("maid.luau")
 
 do -- populating METHOD_NAMES_ARRAY
 	for name, order in cleanup_method_names do
@@ -91,7 +91,7 @@ SRC = string.gsub(SRC, "CLEANUP%((.-)%)", function(args)
 	end
 
 	return if setter ~= "nil" then
-			string.gsub(inner, "REMOVE%(%)", `{setter}(duster :: any, index)`)
+			string.gsub(inner, "REMOVE%(%)", `{setter}(maid :: any, index)`)
 		else
 			string.gsub(inner, "%s-REMOVE%(%)", "")
 end)
@@ -113,12 +113,12 @@ do -- appending license to top of file
 			.. LICENSE
 			.. string.sub(SRC, header_end, #SRC)
 	else
-		error("duster.luau doesn't have a header comment")
+		error("maid.luau doesn't have a header comment")
 	end
 end
 
 if string.sub(process.args[1], 1, 1) == "w" then
-	fs.writeFile("duster.luau", SRC)
+	fs.writeFile("maid.luau", SRC)
 end
 
 print(SRC)

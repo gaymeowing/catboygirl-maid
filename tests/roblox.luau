@@ -1,12 +1,12 @@
 
 --[[
 	roblox
-	roblox specific duster test
+	roblox specific catboygirl maid test
 ]]
 
-local duster = require("../duster")
+local maid = require("../maid")
 
-local function TEST(cleanup: { duster.Cleanable }, call: (method: string, ...unknown) -> ())
+local function TEST(cleanup: { maid.Cleanable }, call: (method: string, ...unknown) -> ())
 	local connection = game.Changed:Connect(function() end)
 	local part = Instance.new("Part")
 	local has_destroyed = false
@@ -35,13 +35,13 @@ local function TEST(cleanup: { duster.Cleanable }, call: (method: string, ...unk
 	assert(has_destroyed, "part wasn't destroyed")
 end
 
-local duster_class = duster.create()
+local maid_class = maid.create()
 local cleanup = {}
 
-TEST(duster_class, function(method, ...)
-	return duster_class[method](duster_class, ...)
+TEST(maid_class, function(method, ...)
+	return maid_class[method](maid_class, ...)
 end)
 
 TEST(cleanup, function(method, ...)
-	return duster[method](...)
+	return maid[method](...)
 end)

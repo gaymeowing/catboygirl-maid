@@ -1,13 +1,13 @@
 
 --[[
 	luau
-	generic luau duster test
+	generic luau catboygirl maid test
 ]]
 
 local cleanup_method_names = require("../cleanup_method_names")
-local duster = require("../duster")
+local maid = require("@catboygirl-maid")
 
-local function TEST(cleanup: { duster.Cleanable }, call: (key: string, ...unknown) -> ())
+local function TEST(cleanup: { maid.Cleanable }, call: (key: string, ...unknown) -> ())
 	local thread = coroutine.create(function() end)
 	local cleaner_given_cleaner_table = false
 	local function_has_ran = false
@@ -49,25 +49,25 @@ local function TEST(cleanup: { duster.Cleanable }, call: (key: string, ...unknow
 	assert(#cleanup == 0, "cleanup array wasn't cleared")
 	assert(cleaner_has_ran, "'cleaner' didn't run")
 	
-	local function class_cleanup_test(method_name: string, duster_method: string)
+	local function class_cleanup_test(method_name: string, maid_method: string)
 		local has_cleanup_been_called = false
-		local duster_method = "clear"
+		local maid_method = "clear"
 		local class
 
 		class = {
 			[method_name] = function(provided_class)
 				if not provided_class == class then
-					error(`cleanup method '{method_name}' wasn't given the correct class table by {duster_method}`)
+					error(`cleanup method '{method_name}' wasn't given the correct class table by {maid_method}`)
 				end
 				has_cleanup_been_called = true
 			end
 		}
 
 		call("insert", class)
-		call(duster_method, class)
+		call(maid_method, class)
 
 		if not has_cleanup_been_called then
-			error( `cleanup method '{method_name}' was not called by {duster_method}`)
+			error( `cleanup method '{method_name}' was not called by {maid_method}`)
 		end	
 	end
 
@@ -77,17 +77,17 @@ local function TEST(cleanup: { duster.Cleanable }, call: (key: string, ...unknow
 	end
 end
 
-local duster_class = duster.create()
+local maid_class = maid.create()
 
-assert(getmetatable(duster_class) ~= nil, "duster.create() doesn't set metatable")
-assert(type(duster_class.values) == "table", "type of duster.values isn't table")
+assert(getmetatable(maid_class) ~= nil, "maid.create() doesn't set metatable")
+assert(type(maid_class.values) == "table", "type of maid.values isn't table")
 
-TEST(duster_class.values, function(method, ...)
-	return duster_class[method](duster_class, ...)
+TEST(maid_class.values, function(method, ...)
+	return maid_class[method](maid_class, ...)
 end)
 
 local cleanup = {}
 
 TEST(cleanup, function(method, ...)
-	return duster[method](cleanup, ...)
+	return maid[method](cleanup, ...)
 end)

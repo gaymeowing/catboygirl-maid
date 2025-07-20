@@ -1,7 +1,7 @@
 --!native
 
 --[[
-	duster
+	catboygirl maid
 	fast and lightweight maid impl ( thats also better than janitor )
 ]]
 
@@ -22,47 +22,47 @@ type function IfAndUnion(a: type, b: type, c: type)
 			a
 end
 
-type RBXScriptConnection = RBXScriptConnection
+type RobloxScriptConnection = RBXScriptConnection
 
-type Instance = Instance
+type RobloxInstance = Instance
 
 export type Cleanable = IfAndUnion<
 	| { [keyof<typeof(cleanup_method_names)>]: TableCleanupMethod }
 	| () -> ()
 	| thread,
-	RBXScriptConnection, Instance
+	RobloxScriptConnection, RobloxInstance
 >
 
-type DusterImpl<D> = {
+type MaidImpl<D> = {
 	--[[
-		Inserts a value to the `duster`, with the option of providing a `cleaner` to use to clean the value.
+		Inserts a value to the `maid`, with the option of providing a `cleaner` to use to clean the value.
 		This function is eqvilent to `table.insert`, except for the fact it allows for a `cleaner` function. 
 		It is reccomended to use `table.insert` instead if possible, as it will be much more faster as it is [fast-called](https://luau.org/performance#optimized-libraries).
 	]]
-	insert: <V>(duster: D, value: V & Cleanable, cleaner: Cleaner<V>) -> V,
+	insert: <V>(maid: D, value: V & Cleanable, cleaner: Cleaner<V>) -> V,
 	--[[
-		Cleans up and removes a `value` from the `duster` provided.
+		Cleans up and removes a `value` from the `maid` provided.
 	]]
-	remove: (duster: D, value: Cleanable) -> (),
+	remove: (maid: D, value: Cleanable) -> (),
 	--[[
-		Cleans up and removes every value in the `duster` provided.
+		Cleans up and removes every value in the `maid` provided.
 	]]
-	clear: (duster: D) -> (),
+	clear: (maid: D) -> (),
 }
 
-type DusterPrototype =  DusterImpl<Duster> & {
-	__index: DusterPrototype,
+type MaidPrototype =  MaidImpl<Maid> & {
+	__index: MaidPrototype,
 }
 
-export type Duster = typeof(setmetatable({} :: {
+export type Maid = typeof(setmetatable({} :: {
 	values: { Cleanable }
-}, {} :: DusterPrototype))
+}, {} :: MaidPrototype))
 
-type Export = DusterImpl<{ Cleanable }> & {
+type Export = MaidImpl<{ Cleanable }> & {
 	--[[
-		Creates a new `duster` object.
+		Creates a new `maid` object.
 	]]
-	create: () -> Duster,
+	create: () -> Maid,
 }
 
 local DISCONNECT: (any) -> () = function() end
@@ -82,28 +82,28 @@ local function SWAP_REMOVE(t: { unknown }, index: number)
 	end
 end
 
-local function insert<V>(duster: { Cleanable }, value: V & Cleanable, cleaner: Cleaner<V>): V
+local function insert<V>(maid: { Cleanable }, value: V & Cleanable, cleaner: Cleaner<V>): V
 	if cleaner then
-		INSERT(duster, function()
+		INSERT(maid, function()
 			(cleaner :: any)(value)
 		end)
 	else
-		INSERT(duster, value :: any)
+		INSERT(maid, value :: any)
 	end
 	
 	return value
 end
 
-local function remove(duster: { Cleanable }, value: Cleanable)
-	local index = FIND(duster, value)
+local function remove(maid: { Cleanable }, value: Cleanable)
+	local index = FIND(maid, value)
 	
 	if index then
 		CLEANUP(SWAP_REMOVE)
 	end
 end
 
-local function clear(duster: { Cleanable })
-	for index, value in duster do
+local function clear(maid: { Cleanable })
+	for index, value in maid do
 		CLEANUP(nil, "continue")
 	end
 
@@ -111,21 +111,21 @@ local function clear(duster: { Cleanable })
 		using table.clear because im unsure if a gc pause can occur during iteration
 		that will resize the cleanup array making it a hash mid iteration
 	]]
-	table.clear(duster)
+	table.clear(maid)
 end
 
-local duster = {} :: DusterPrototype
+local maid = {} :: MaidPrototype
 
-function duster.insert(duster, value, cleaner)
-	insert(duster.values, value, cleaner)
+function maid.insert(maid, value, cleaner)
+	insert(maid.values, value, cleaner)
 end
 
-function duster.remove(duster, value)
-	remove(duster.values, value)
+function maid.remove(maid, value)
+	remove(maid.values, value)
 end
 
-function duster.clear(duster)
-	clear(duster.values)
+function maid.clear(maid)
+	clear(maid.values)
 end
 
 local export = {
@@ -137,12 +137,12 @@ local export = {
 function export.create()
 	return table.freeze(setmetatable({
 		values = {}
-	}, duster))
+	}, maid))
 end
 
 do
 
-	-- checking if duster is running in roblox
+	-- checking if maid is running in roblox
 	if game and script and elapsedTime and Vector3int16 then
 		local connection = script.Changed:Connect(function() end)
 		DISCONNECT = connection.Disconnect :: any
@@ -170,8 +170,8 @@ do
 		end
 	end
 	
-	duster.__index = duster
-	table.freeze(duster)
+	maid.__index = maid
+	table.freeze(maid)
 end
 	
 return table.freeze(export) :: Export
